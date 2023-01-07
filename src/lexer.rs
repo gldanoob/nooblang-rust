@@ -9,9 +9,11 @@ use crate::{
     token::{Token, TokenType},
 };
 
-// Char-by-char reader
+// bytes reader
 pub struct Reader {
     input: Vec<u8>,
+    // I dumb
+    newlines: Vec<usize>,
     pt: usize,
     col: usize,
     line: usize,
@@ -25,6 +27,7 @@ impl Reader {
             .map_err(|_| Errors::IOError)?;
         Ok(Self {
             input,
+            newlines: Vec::new(),
             pt: 0,
             col: 1,
             line: 1,
@@ -68,9 +71,51 @@ impl Reader {
         self.col -= prev - self.pt;
     }
 
-    pub fn next_line(&mut self) {
+    // Consume newline character
+    pub fn newline(&mut self) {
+        self.newlines.push(self.pt);
         self.line += 1;
         self.col = 1;
+        self.pt += 1;
+    }
+
+    // Used in lexer
+    pub fn get_this_line(&mut self) -> &[u8] {
+        let start = if self.line > 1 {
+            self.newlines[self.line - 2] + 1
+        } else {
+            0
+        };
+
+        let end = if self.line <= self.newlines.len() {
+            self.newlines[self.line - 1]
+        } else {
+            // Read to end of newline
+            while !Lexer::is_eol(self.peek()) {
+                self.readc();
+            }
+            self.pt
+        };
+
+        &self.input[start..end]
+    }
+
+    // Used in parser evaluator etc
+    pub fn get_line(&self, line: usize) -> &[u8] {
+        let start = if self.line > 1 {
+            self.newlines[self.line - 2] + 1
+        } else {
+            0
+        };
+
+        let end = if self.line <= self.newlines.len() {
+            self.newlines[line - 1]
+        } else {
+            // Must be the last line
+            self.input.len()
+        };
+
+        &self.input[start..end]
     }
 }
 
@@ -86,7 +131,7 @@ impl Lexer {
         let mut tokens = Vec::new();
         loop {
             let tok = self.scan_token()?;
-            if let TokenType::Eof = tok.token_type {
+            if TokenType::Eof == tok.token_type {
                 // Freaking borrow checker
                 tokens.push(tok);
                 break;
@@ -106,10 +151,9 @@ impl Lexer {
             c if c.is_ascii_digit() => self.scan_number()?,
             c if c.is_ascii_alphabetic() => self.scan_word(),
             c => {
-                return Err(Errors::SyntaxError(
-                    format!("WEIRD CHARACTER: {}", c as char),
-                    self.reader.pos(),
-                ))
+                return Err(
+                    self.syntax_error(format!("WEIRD CHARACTER: {}", c as char), self.reader.pos())
+                );
             }
         })
     }
@@ -117,7 +161,7 @@ impl Lexer {
     fn scan_word(&mut self) -> Token {
         let mut s = Vec::new();
         let pos = self.reader.pos();
-        while self.reader.peek().is_ascii_alphanumeric() {
+        while self.reader.peek().is_ascii_alphabetic() {
             s.push(self.reader.readc());
         }
 
@@ -125,7 +169,7 @@ impl Lexer {
         // Is keyword
         if let Some(token) = Token::from_str(&s, pos) {
             // Read until newline if comment
-            if let TokenType::Com = token.token_type {
+            if TokenType::Com == token.token_type {
                 while !Lexer::is_eol(self.reader.peek()) {
                     self.reader.readc();
                 }
@@ -142,11 +186,8 @@ impl Lexer {
         self.reader.skip(1);
         let mut s = Vec::new();
         while self.reader.peek() != b'"' {
-            if Lexer::is_eol(self.reader.peek()) {
-                return Err(Errors::SyntaxError(
-                    "Unterminated string".to_string(),
-                    self.reader.pos(),
-                ));
+            if Self::is_eol(self.reader.peek()) {
+                return Err(self.syntax_error("Unterminated string".to_string(), self.reader.pos()));
             }
             s.push(self.reader.readc());
         }
@@ -167,7 +208,7 @@ impl Lexer {
         let s = Self::to_string_lossy(&s);
         let num: u128 = s
             .parse()
-            .map_err(|_| Errors::SyntaxError("NUMBER TOO LARGE".to_string(), self.reader.pos()))?;
+            .map_err(|_| self.syntax_error("NUMBER TOO LARGE".to_string(), pos))?;
 
         Ok(Token::new(TokenType::Number(num), pos))
     }
@@ -178,14 +219,13 @@ impl Lexer {
             self.reader.readc();
         }
 
-        if self.reader.readc() != b'\n' {
-            return Err(Errors::SyntaxError(
-                "Carriage without return? Goofy".to_string(),
-                self.reader.pos(),
-            ));
+        if self.reader.peek() != b'\n' {
+            return Err(self.syntax_error("Carriage without return? Goofy".to_string(), pos));
         }
 
-        self.reader.next_line();
+        // Skip \n
+        self.reader.newline();
+
         Ok(Token::new(TokenType::Lf, pos))
     }
 
@@ -206,6 +246,10 @@ impl Lexer {
             b'\r' | b'\n' | 26 => true,
             _ => false,
         }
+    }
+
+    fn syntax_error(&mut self, msg: String, pos: (usize, usize)) -> Errors {
+        Errors::SyntaxError(msg, pos, Self::to_string_lossy(self.reader.get_this_line()))
     }
 
     // &[u8] to String

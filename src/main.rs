@@ -7,6 +7,8 @@ use std::{
 mod errors;
 mod lexer;
 mod token;
+mod ast;
+mod parser;
 fn main() -> io::Result<()> {
     let f = BufReader::new(File::open("test.txt")?);
     let stream = lexer::Reader::new(f).unwrap();
