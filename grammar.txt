@@ -1,0 +1,80 @@
+STMT        = ASGN | REPEAT | EXPR
+
+ASGN        = [ID stores] EXPR
+
+REPEAT      = [repeat] EXPR 
+
+WRITE       = [write] EXPR
+
+
+
+
+EXPR        = SWITCH
+
+SWITCH      = [OR if OR] (OR otherwise)
+              | OR
+
+// More here...
+
+OR          = [AND or] AND
+
+AND         = [NOT and] NOT
+
+NOT         = [not] IS
+
+IS          = [CMP is|isnt] CMP
+
+CMP         = ARITH [below|above|atmost|atleast ARITH]
+
+ARITH       = [TERM plus|minus] TERM
+
+TERM        = [EXP times|over] EXP
+
+EXP         = CONV tothe CONV
+
+CONV        = num|text NEG
+
+NEG         = [neg] DECIMAL
+
+DECIMAL     = NUMBER dot NUMBER
+            | ATOM
+
+ATOM        = [read] | ID | LITERAL | PAREN
+
+PAREN       = open EXPR close
+
+
+
+
+
+result stores "even" if x mod 2 is 0
+              "odd" otherwise
+
+x stores num read
+run 1
+write result
+
+write "bruh" if result is "even"
+
+--> write ("bruh" if result is "even")
+
+
+
+
+y be 10                         note        y = 10
+index be 1                      note        index = 1
+run index plus 7                note        arr[index] = y
+run index plus 13               note        x = arr[index]
+write x                         note        print(x)
+
+a be y
+b be y
+c be y
+d be y
+e be y
+
+x be a
+x be b
+x be c
+x be d
+x be e

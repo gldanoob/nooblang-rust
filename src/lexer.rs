@@ -9,6 +9,10 @@ use crate::{
     token::{Token, TokenType},
 };
 
+// location in code
+#[derive(Debug, Clone, Copy)]
+pub struct Pos(pub usize, pub usize);
+
 // bytes reader
 pub struct Reader {
     input: Vec<u8>,
@@ -34,14 +38,13 @@ impl Reader {
         })
     }
 
-    pub fn pos(&self) -> (usize, usize) {
-        (self.line, self.col)
+    pub fn pos(&self) -> Pos {
+        Pos(self.line, self.col)
     }
 
-    pub fn read(&mut self, n: usize) -> &[u8] {
+    pub fn _read(&mut self, n: usize) -> &[u8] {
         let prev = self.pt;
         self.skip(n);
-        self.col += n;
         &self.input[prev..self.pt]
     }
 
@@ -65,7 +68,7 @@ impl Reader {
         self.col += self.pt - prev;
     }
 
-    pub fn back(&mut self, n: usize) {
+    pub fn _back(&mut self, n: usize) {
         let prev = self.pt;
         self.pt = cmp::max(0, self.pt - n);
         self.col -= prev - self.pt;
@@ -100,15 +103,16 @@ impl Reader {
         &self.input[start..end]
     }
 
-    // Used in parser evaluator etc
+    // Used in parser, eval etc
     pub fn get_line(&self, line: usize) -> &[u8] {
-        let start = if self.line > 1 {
-            self.newlines[self.line - 2] + 1
+        println!("{:?} {:?}", self.input, self.newlines);
+        let start = if line > 1 {
+            self.newlines[line - 2] + 1
         } else {
             0
         };
 
-        let end = if self.line <= self.newlines.len() {
+        let end = if line <= self.newlines.len() {
             self.newlines[line - 1]
         } else {
             // Must be the last line
@@ -119,12 +123,12 @@ impl Reader {
     }
 }
 
-pub struct Lexer {
-    reader: Reader,
+pub struct Lexer<'a> {
+    reader: &'a mut Reader,
 }
 
-impl Lexer {
-    pub fn new(reader: Reader) -> Self {
+impl<'a> Lexer<'a> {
+    pub fn new(reader: &'a mut Reader) -> Self {
         Self { reader }
     }
     pub fn lex(&mut self) -> Result<Vec<Token>, Errors> {
@@ -152,7 +156,7 @@ impl Lexer {
             c if c.is_ascii_alphabetic() => self.scan_word(),
             c => {
                 return Err(
-                    self.syntax_error(format!("WEIRD CHARACTER: {}", c as char), self.reader.pos())
+                    self.syntax_error(format!("WEIRD SYMBOL: {}", c as char), self.reader.pos())
                 );
             }
         })
@@ -169,7 +173,7 @@ impl Lexer {
         // Is keyword
         if let Some(token) = Token::from_str(&s, pos) {
             // Read until newline if comment
-            if TokenType::Com == token.token_type {
+            if TokenType::Note == token.token_type {
                 while !Lexer::is_eol(self.reader.peek()) {
                     self.reader.readc();
                 }
@@ -187,7 +191,7 @@ impl Lexer {
         let mut s = Vec::new();
         while self.reader.peek() != b'"' {
             if Self::is_eol(self.reader.peek()) {
-                return Err(self.syntax_error("Unterminated string".to_string(), self.reader.pos()));
+                return Err(self.syntax_error("MISSING QUOTE".to_string(), self.reader.pos()));
             }
             s.push(self.reader.readc());
         }
@@ -206,11 +210,16 @@ impl Lexer {
         }
 
         let s = Self::to_string_lossy(&s);
-        let num: u128 = s
-            .parse()
-            .map_err(|_| self.syntax_error("NUMBER TOO LARGE".to_string(), pos))?;
+        let num = s.parse();
 
-        Ok(Token::new(TokenType::Number(num), pos))
+        // range of i128 is [-2^127, 2^127-1]
+        if let Ok(num) = num {
+            if num < 1 << 127 {
+                return Ok(Token::new(TokenType::Number(num), pos));
+            }
+        }
+
+        Err(self.syntax_error("NUMBER TOO LARGE".to_string(), pos))?
     }
 
     fn scan_newline(&mut self) -> Result<Token, Errors> {
@@ -248,7 +257,7 @@ impl Lexer {
         }
     }
 
-    fn syntax_error(&mut self, msg: String, pos: (usize, usize)) -> Errors {
+    fn syntax_error(&mut self, msg: String, pos: Pos) -> Errors {
         Errors::SyntaxError(msg, pos, Self::to_string_lossy(self.reader.get_this_line()))
     }
 

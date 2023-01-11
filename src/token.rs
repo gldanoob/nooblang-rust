@@ -1,3 +1,5 @@
+use crate::lexer::Pos;
+
 #[derive(Debug, PartialEq)]
 pub enum TokenType {
     // Literals
@@ -6,99 +8,105 @@ pub enum TokenType {
     Number(u128),
 
     // Keywords
-    Oof,
-    Noob,
+    Write,
+    Read,
     Be,
-    Eef,
-    Elz,
+    Repeat,
+    If,
+    Otherwise,
     For,
     In,
     To,
     Wow,
     Lol,
     Dot,
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Pow,
-    Inc,
-    Dec,
-    Eq,
-    Nq,
-    Las,
-    Mor,
-    Laq,
-    Moq,
+    Plus,
+    Minus,
+    Times,
+    Over,
+    ToThe,
+    Mod,
+    Is,
+    Isnt,
+    Below,
+    Above,
+    AtMost,
+    AtLeast,
+    And,
+    Or,
     Not,
     Num,
-    Str,
-    Tru,
-    Foz,
-    Lbr,
-    Rbr,
+    Text,
+    Choice,
+    Yes,
+    No,
+    Open,
+    Close,
     Lf,
     Eof,
-    Com,
+    Note,
     Neg,
 }
 
 #[derive(Debug)]
 pub struct Token {
     pub token_type: TokenType,
-    pub location: (usize, usize),
+    pub location: Pos,
 }
 
 impl TokenType {
     pub fn from_str(s: &str) -> Option<Self> {
         Some(match s {
-            "oof" => Self::Oof,
-            "noob" => Self::Noob,
+            "write" => Self::Write,
+            "read" => Self::Read,
             "be" => Self::Be,
-            "eef" => Self::Eef,
-            "elz" => Self::Elz,
+            "repeat" => Self::Repeat,
+            "if" => Self::If,
+            "otherwise" => Self::Otherwise,
             "for" => Self::For,
             "in" => Self::In,
             "to" => Self::To,
             "wow" => Self::Wow,
             "lol" => Self::Lol,
             "dot" => Self::Dot,
-            "add" => Self::Add,
-            "sub" => Self::Sub,
-            "mul" => Self::Mul,
-            "div" => Self::Div,
-            "pow" => Self::Pow,
-            "inc" => Self::Inc,
-            "dec" => Self::Dec,
-            "eq" => Self::Eq,
-            "nq" => Self::Nq,
-            "las" => Self::Las,
-            "mor" => Self::Mor,
-            "laq" => Self::Laq,
-            "moq" => Self::Moq,
+            "plus" => Self::Plus,
+            "minus" => Self::Minus,
+            "times" => Self::Times,
+            "over" => Self::Over,
+            "mod" => Self::Mod,
+            "tothe" => Self::ToThe,
+            "is" => Self::Is,
+            "isnt" => Self::Isnt,
+            "below" => Self::Below,
+            "above" => Self::Above,
+            "atmost" => Self::AtMost,
+            "atleast" => Self::AtLeast,
+            "and" => Self::And,
+            "or" => Self::Or,
             "not" => Self::Not,
             "num" => Self::Num,
-            "str" => Self::Str,
-            "tru" => Self::Tru,
-            "foz" => Self::Foz,
+            "text" => Self::Text,
+            "choice" => Self::Choice,
+            "yes" => Self::Yes,
+            "no" => Self::No,
             "neg" => Self::Neg,
-            "rbr" => Self::Rbr,
-            "lbr" => Self::Lbr,
-            "com" => Self::Com,
+            "close" => Self::Close,
+            "open" => Self::Open,
+            "note" => Self::Note,
             _ => return None,
         })
     }
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, location: (usize, usize)) -> Self {
+    pub fn new(token_type: TokenType, location: Pos) -> Self {
         Self {
             token_type,
             location,
         }
     }
 
-    pub fn from_str(lexeme: &str, location: (usize, usize)) -> Option<Self> {
+    pub fn from_str(lexeme: &str, location: Pos) -> Option<Self> {
         match TokenType::from_str(&lexeme) {
             Some(token_type) => Some(Self {
                 token_type,
