@@ -93,14 +93,14 @@ impl<'a> Parser<'a> {
 
     fn parse_run(&mut self) -> Result<Stmt, Errors> {
         let from = self.parse_expr()?;
-        let tok = self.read();
+        let tok = self.peek();
         let location = tok.location;
         if let TokenType::To = tok.token_type {
+            self.read();
             let to = self.parse_expr()?;
             Ok(Stmt::RunFrom(Box::from(from), Box::from(to), location.0))
         } else {
-            let at = self.parse_expr()?;
-            Ok(Stmt::RunAt(Box::from(at), location.0))
+            Ok(Stmt::RunAt(Box::from(from), location.0))
         }
     }
 
