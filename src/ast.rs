@@ -2,7 +2,6 @@ use crate::lexer::Pos;
 
 #[derive(Debug, PartialEq)]
 pub enum Operator {
-    Be,
     Is,
     Isnt,
     Below,
@@ -20,7 +19,6 @@ pub enum Operator {
     And,
     Or,
     Not,
-    Write,
     Text,
     Num,
     Choice,
@@ -29,7 +27,23 @@ pub enum Operator {
 // Abstract types
 #[derive(Debug)]
 pub enum Stmt {
+    // Id, Expr
+    Asgn(Box<Expr>, Box<Expr>, usize),
+
+    // From, To
+    RunFrom(Box<Expr>, Box<Expr>, usize),
+    RunAt(Box<Expr>, usize),
+    Write(Box<Expr>, usize),
+
+    // Statement, condition
+    Switch(Box<Stmt>, Box<Expr>, usize),
+
     Expr(Box<Expr>),
+
+    // Blankline
+    Blank,
+
+    End,
 }
 
 #[derive(Debug)]

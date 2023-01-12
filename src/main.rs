@@ -45,8 +45,8 @@ fn main() -> io::Result<()> {
     #[cfg(debug_assertions)]
     println!("{:#?}\n", ast);
 
-    let mut eval = eval::Eval::new(&stream);
-    let v = match eval.run_prog(&ast) {
+    let mut eval = eval::Eval::new(&stream, &ast);
+    let v = match eval.run_prog() {
         Ok(v) => v,
         Err(e) => {
             eprintln!("{}", e);

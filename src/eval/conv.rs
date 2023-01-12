@@ -10,8 +10,8 @@ impl<'a> Eval<'a> {
         })
     }
 
-    pub fn num(&self, a: &Value, location: Pos) -> Result<Value, Errors> {
-        Ok(match a {
+    pub fn num(&self, a: &Value, _location: Pos) -> Value {
+        match a {
             Value::Choice(a) => Value::Int(if *a { 0 } else { 1 }),
             Value::Int(a) => Value::Int(*a),
             Value::Float(a) => Value::Float(*a),
@@ -21,13 +21,12 @@ impl<'a> Eval<'a> {
                 } else if let Ok(v) = a.parse::<f64>() {
                     Value::Float(v)
                 } else {
-                    return Err(
-                        self.runtime_error("CANNOT CONVERT TO NUMBER".to_string(), location)
-                    );
+                    // Can't convert, silently return nil :)
+                    Value::Nothing
                 }
             }
             Value::Nothing => Value::Int(0),
-        })
+        }
     }
 
     pub fn text(&self, a: &Value) -> Value {

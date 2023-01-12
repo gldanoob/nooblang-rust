@@ -11,6 +11,7 @@ use crate::{
 
 mod arith;
 mod cmp;
+mod control;
 mod conv;
 mod io;
 mod var;
@@ -22,7 +23,7 @@ pub struct Name {
     // scope
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Value {
     Int(i128),
     Float(f64),
@@ -32,39 +33,50 @@ pub enum Value {
 }
 
 pub struct Eval<'a> {
+    input: &'a Vec<Stmt>,
     reader: &'a Reader,
     context: HashMap<Name, Value>,
 }
 
 impl<'a> Eval<'a> {
-    pub fn new(reader: &'a Reader) -> Self {
+    pub fn new(reader: &'a Reader, input: &'a Vec<Stmt>) -> Self {
         Self {
+            input,
             reader,
             context: HashMap::new(),
         }
     }
 
-    pub fn run_prog(&mut self, input: &Vec<Stmt>) -> Result<Value, Errors> {
-        let mut v = Value::Nothing;
-        for stmt in input {
-            v = self.run_stmt(stmt)?;
+    pub fn run_prog(&mut self) -> Result<Value, Errors> {
+        let mut ret = Value::Nothing;
+        for stmt in self.input {
+            let v = self.run_stmt(stmt);
+            // End statement
+            if let Err(Errors::EndProg) = v {
+                break;
+            }
+            ret = v?;
         }
-        Ok(v)
+        Ok(ret)
     }
 
     pub fn run_stmt(&mut self, stmt: &Stmt) -> Result<Value, Errors> {
         match stmt {
-            Stmt::Expr(expr) => self.eval_expr(expr),
+            Stmt::Expr(expr) => return self.eval_expr(expr),
+            Stmt::Write(expr, line) => self.write(expr.as_ref(), *line)?,
+            Stmt::RunFrom(from, to, line) => self.run_from(from.as_ref(), to.as_ref(), *line)?,
+            Stmt::RunAt(expr, line) => self.run_at(expr.as_ref(), *line)?,
+            Stmt::Switch(stmt, cond, line) => self.switch(stmt.as_ref(), cond.as_ref(), *line)?,
+            Stmt::Asgn(id, expr, line) => self.asgn(id.as_ref(), expr.as_ref(), *line)?,
+            Stmt::Blank => (),
+            Stmt::End => return Err(Errors::EndProg),
         }
+        Ok(Value::Nothing)
     }
 
     pub fn eval_expr(&mut self, expr: &Expr) -> Result<Value, Errors> {
         match expr {
             Expr::Binary(op, left, right, location) => {
-                if *op == Operator::Be {
-                    let right = self.eval_expr(right.as_ref())?;
-                    return Ok(self.asgn(left.as_ref(), &right));
-                }
                 let left = self.eval_expr(left.as_ref())?;
                 let right = self.eval_expr(right.as_ref())?;
                 match op {
@@ -92,7 +104,6 @@ impl<'a> Eval<'a> {
             Expr::Unary(op, operand, location) => {
                 let operand = self.eval_expr(operand.as_ref())?;
                 match op {
-                    Operator::Write => self.write(&operand, *location),
                     // arith.rs
                     Operator::Neg => self.neg(&operand, *location),
 
@@ -100,7 +111,7 @@ impl<'a> Eval<'a> {
                     Operator::Not => Ok(self.not(&operand)),
 
                     // conv.rs
-                    Operator::Num => self.num(&operand, *location),
+                    Operator::Num => Ok(self.num(&operand, *location)),
                     Operator::Text => Ok(self.text(&operand)),
                     Operator::Choice => Ok(self.choice(&operand)),
 

@@ -11,14 +11,9 @@ pub enum TokenType {
     Write,
     Read,
     Be,
-    Repeat,
+    Run,
     If,
-    Otherwise,
-    For,
-    In,
     To,
-    Wow,
-    Lol,
     Dot,
     Plus,
     Minus,
@@ -46,6 +41,7 @@ pub enum TokenType {
     Eof,
     Note,
     Neg,
+    End,
 }
 
 #[derive(Debug)]
@@ -60,14 +56,9 @@ impl TokenType {
             "write" => Self::Write,
             "read" => Self::Read,
             "be" => Self::Be,
-            "repeat" => Self::Repeat,
+            "run" => Self::Run,
             "if" => Self::If,
-            "otherwise" => Self::Otherwise,
-            "for" => Self::For,
-            "in" => Self::In,
             "to" => Self::To,
-            "wow" => Self::Wow,
-            "lol" => Self::Lol,
             "dot" => Self::Dot,
             "plus" => Self::Plus,
             "minus" => Self::Minus,
@@ -93,6 +84,7 @@ impl TokenType {
             "close" => Self::Close,
             "open" => Self::Open,
             "note" => Self::Note,
+            "end" => Self::End,
             _ => return None,
         })
     }

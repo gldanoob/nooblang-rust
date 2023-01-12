@@ -8,6 +8,7 @@ pub enum Errors {
     SyntaxError(String, Pos, String),
     IOError,
     RuntimeError(String, Pos, String),
+    EndProg,
 }
 
 impl Error for Errors {}
@@ -41,7 +42,10 @@ impl Display for Errors {
                 write!(f, "{}", context)?;
 
                 write!(f, "\n{}^-- SEE", " ".repeat(col + 3))
-            }
+            },
+            Self::EndProg => {
+                write!(f, "Program ended.")
+            },
         }
     }
 }

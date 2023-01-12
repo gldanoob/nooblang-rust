@@ -105,7 +105,6 @@ impl Reader {
 
     // Used in parser, eval etc
     pub fn get_line(&self, line: usize) -> &[u8] {
-        println!("{:?} {:?}", self.input, self.newlines);
         let start = if line > 1 {
             self.newlines[line - 2] + 1
         } else {
@@ -153,7 +152,7 @@ impl<'a> Lexer<'a> {
             b'\n' | b'\r' => self.scan_newline()?,
             26 => self.scan_eof(),
             c if c.is_ascii_digit() => self.scan_number()?,
-            c if c.is_ascii_alphabetic() => self.scan_word(),
+            c if c.is_ascii_alphabetic() => self.scan_word()?,
             c => {
                 return Err(
                     self.syntax_error(format!("WEIRD SYMBOL: {}", c as char), self.reader.pos())
@@ -162,7 +161,7 @@ impl<'a> Lexer<'a> {
         })
     }
 
-    fn scan_word(&mut self) -> Token {
+    fn scan_word(&mut self) -> Result<Token, Errors> {
         let mut s = Vec::new();
         let pos = self.reader.pos();
         while self.reader.peek().is_ascii_alphabetic() {
@@ -177,12 +176,13 @@ impl<'a> Lexer<'a> {
                 while !Lexer::is_eol(self.reader.peek()) {
                     self.reader.readc();
                 }
+                return self.scan_newline();
             }
-            return token;
+            return Ok(token);
         }
 
         // Is identifier
-        return Token::new(TokenType::Id(s), pos);
+        Ok(Token::new(TokenType::Id(s), pos))
     }
 
     fn scan_string(&mut self) -> Result<Token, Errors> {

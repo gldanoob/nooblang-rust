@@ -40,13 +40,18 @@ impl<'a> Parser<'a> {
             // Each iteration is a line
             match self.peek().token_type {
                 TokenType::Eof => break,
-                TokenType::Lf => self.read(),
+                TokenType::Lf => {
+                    self.read();
+                    prog.push(Stmt::Blank);
+                }
                 _ => {
-                    prog.push(self.parse_stmt()?);
+                    prog.push(self.parse_switch()?);
                     let eol = self.peek();
                     match eol.token_type {
                         TokenType::Eof => break,
-                        TokenType::Lf => self.read(),
+                        TokenType::Lf => {
+                            self.read();
+                        }
                         _ => {
                             return Err(self.parse_error("WHY THIS HERE".to_string(), eol.location))
                         }
@@ -57,44 +62,81 @@ impl<'a> Parser<'a> {
         Ok(prog)
     }
 
+    fn parse_switch(&mut self) -> Result<Stmt, Errors> {
+        let stmt = self.parse_stmt()?;
+        let TokenType::If = self.peek().token_type else {
+            return Ok(stmt);
+        };
+
+        // Found single if
+        let line = self.read().location.0;
+        Ok(Stmt::Switch(
+            Box::new(stmt),
+            Box::new(self.parse_expr()?),
+            line,
+        ))
+    }
+
     fn parse_stmt(&mut self) -> Result<Stmt, Errors> {
-        Ok(Stmt::Expr(Box::from(self.parse_expr()?)))
+        let tok = self.read();
+        let Pos(line, _) = tok.location;
+        Ok(match tok.token_type {
+            TokenType::Run => self.parse_run()?,
+            TokenType::Write => Stmt::Write(Box::from(self.parse_expr()?), line),
+            TokenType::End => Stmt::End,
+            _ => {
+                self.back();
+                self.parse_asgn()?
+            }
+        })
     }
 
-    fn parse_expr(&mut self) -> Result<Expr, Errors> {
-        self.parse_asgn()
+    fn parse_run(&mut self) -> Result<Stmt, Errors> {
+        let from = self.parse_expr()?;
+        let tok = self.read();
+        let location = tok.location;
+        if let TokenType::To = tok.token_type {
+            let to = self.parse_expr()?;
+            Ok(Stmt::RunFrom(Box::from(from), Box::from(to), location.0))
+        } else {
+            let at = self.parse_expr()?;
+            Ok(Stmt::RunAt(Box::from(at), location.0))
+        }
     }
 
-    fn parse_asgn(&mut self) -> Result<Expr, Errors> {
+    fn parse_asgn(&mut self) -> Result<Stmt, Errors> {
         let location = self.peek().location;
-        let left = self.parse_write()?;
+        let left = self.parse_expr()?;
         if TokenType::Be == self.peek().token_type {
             self.read();
             match left {
-                Expr::Id(..) => Ok(Expr::Binary(
-                    Operator::Be,
+                Expr::Id(..) => Ok(Stmt::Asgn(
                     Box::from(left),
-                    Box::from(self.parse_asgn()?),
-                    location,
+                    Box::from(self.parse_expr()?),
+                    location.0,
                 )),
                 _ => Err(self.parse_error("WHERE IDENTIFIER".to_string(), location)),
             }
         } else {
-            Ok(left)
+            Ok(Stmt::Expr(Box::from(left)))
         }
     }
 
-    fn parse_write(&mut self) -> Result<Expr, Errors> {
-        if TokenType::Write == self.peek().token_type {
-            let location = self.read().location;
-            Ok(Expr::Unary(
-                Operator::Write,
-                Box::new(self.parse_write()?),
-                location,
-            ))
-        } else {
-            self.parse_or()
-        }
+    // fn parse_write(&mut self) -> Result<Expr, Errors> {
+    //     if TokenType::Write == self.peek().token_type {
+    //         let location = self.read().location;
+    //         Ok(Expr::Unary(
+    //             Operator::Write,
+    //             Box::new(self.parse_write()?),
+    //             location,
+    //         ))
+    //     } else {
+    //         self.parse_or()
+    //     }
+    // }
+
+    fn parse_expr(&mut self) -> Result<Expr, Errors> {
+        self.parse_or()
     }
 
     fn parse_or(&mut self) -> Result<Expr, Errors> {

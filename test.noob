@@ -1,2 +1,11 @@
-bruh be text 2 plus read 
-write bruh
+x be 2
+prime be yes
+y be 1
+y be y plus 1
+run 8 to 11 if y is x
+prime be no if x mod y is 0
+run 4 to 7
+write x if prime 
+x be x plus 1
+end if x atleast 100
+run 2 to 11

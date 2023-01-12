@@ -1,7 +1,8 @@
 use super::*;
 impl<'a> Eval<'a> {
-    pub fn write(&self, operand: &Value, location: Pos) -> Result<Value, Errors> {
-        let mut formatted = if let Value::Text(s) = self.text(operand) {
+    pub fn write(&mut self, operand: &Expr, _line: usize) -> Result<(), Errors> {
+        let operand = self.eval_expr(operand)?;
+        let mut formatted = if let Value::Text(s) = self.text(&operand) {
             s
         } else {
             // Shouldn't execute
@@ -11,10 +12,12 @@ impl<'a> Eval<'a> {
         stdout()
             .write(formatted.as_bytes())
             .map_err(|_| Errors::IOError)?;
-        Ok(Value::Nothing)
+
+        stdout().flush().map_err(|_| Errors::IOError)?;
+        Ok(())
     }
 
-    pub fn read(&self, location: Pos) -> Result<Value, Errors> {
+    pub fn read(&self, _location: Pos) -> Result<Value, Errors> {
         let mut buf = String::new();
         std::io::stdin()
             .read_line(&mut buf)
