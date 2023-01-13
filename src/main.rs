@@ -1,8 +1,6 @@
-use std::{
-    fs::File,
-    io::{self, BufReader},
-    process,
-};
+use std::{fs::File, io::BufReader};
+
+use errors::Errors;
 
 mod ast;
 mod errors;
@@ -11,19 +9,23 @@ mod lexer;
 mod parser;
 mod token;
 
-fn main() -> io::Result<()> {
-    let f = BufReader::new(File::open(std::env::args().nth(1).unwrap())?);
-    let mut stream = lexer::Reader::new(f).unwrap();
+fn main() {
+    match run_file() {
+        Ok(_) => (),
+        Err(e) => {
+            eprintln!("{}", e);
+        }
+    }
+}
+
+fn run_file() -> Result<(), Errors> {
+    let filename = std::env::args().nth(1).ok_or(Errors::ArgumentError)?;
+    let f = BufReader::new(File::open(filename).map_err(|_| Errors::IOError)?);
+    let mut stream = lexer::Reader::new(f)?;
 
     let mut lex = lexer::Lexer::new(&mut stream);
 
-    let tokens = match lex.lex() {
-        Ok(v) => v,
-        Err(e) => {
-            eprintln!("{}", e);
-            process::exit(1)
-        }
-    };
+    let tokens = lex.lex()?;
 
     #[cfg(debug_assertions)]
     {
@@ -33,26 +35,15 @@ fn main() -> io::Result<()> {
         println!();
     }
 
-    let mut parser = parser::Parser::new(tokens, &stream);
-    let ast = match parser.parse() {
-        Ok(v) => v,
-        Err(e) => {
-            eprintln!("{}", e);
-            process::exit(1)
-        }
-    };
+    let mut parser = parser::Parser::new(&tokens, &stream);
+    let ast = parser.parse()?;
 
     #[cfg(debug_assertions)]
     println!("{:#?}\n", ast);
 
-    let mut eval = eval::Eval::new(&stream, &ast);
-    let v = match eval.run_prog() {
-        Ok(v) => v,
-        Err(e) => {
-            eprintln!("{}", e);
-            process::exit(1)
-        }
-    };
+    let mut eval = eval::Eval::new(&ast, &stream);
+    let v = eval.run_prog()?;
+
     #[cfg(debug_assertions)]
     {
         println!("--> {}", eval::Eval::display(&v));

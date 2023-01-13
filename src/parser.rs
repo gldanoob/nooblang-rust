@@ -6,13 +6,13 @@ use crate::{
 };
 
 pub struct Parser<'a> {
-    input: Vec<Token>,
+    input: &'a Vec<Token>,
     pt: usize,
     reader: &'a Reader,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(input: Vec<Token>, reader: &'a Reader) -> Self {
+    pub fn new(input: &'a Vec<Token>, reader: &'a Reader) -> Self {
         Parser {
             input,
             pt: 0,

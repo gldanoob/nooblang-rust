@@ -1,11 +1,17 @@
-x be 2
-prime be yes
-y be 1
-y be y plus 1
-run 8 to 11 if y atleast x
-prime be no if x mod y is 0
-run 4 to 7
-write x if prime 
-x be x plus 1
-end if x atleast 100
-run 2 to 11
+y be 10                 note        y = 10
+index be 1              note        index = 1
+run index plus 7        note        arr[index] = y
+run index plus 13       note        x = arr[index]
+write x                 note        print(x)    # 10
+
+a be y
+b be y
+c be y
+d be y
+e be y
+
+x be a
+x be b
+x be c
+x be d
+x be e

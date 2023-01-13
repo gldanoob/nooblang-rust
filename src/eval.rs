@@ -36,26 +36,47 @@ pub struct Eval<'a> {
     input: &'a Vec<Stmt>,
     reader: &'a Reader,
     context: HashMap<Name, Value>,
+    // from, to
+    call_stack: Vec<(usize, usize)>,
 }
 
 impl<'a> Eval<'a> {
-    pub fn new(reader: &'a Reader, input: &'a Vec<Stmt>) -> Self {
+    pub fn new(input: &'a Vec<Stmt>, reader: &'a Reader) -> Self {
         Self {
             input,
             reader,
             context: HashMap::new(),
+            call_stack: Vec::new(),
         }
     }
 
     pub fn run_prog(&mut self) -> Result<Value, Errors> {
         let mut ret = Value::Nothing;
-        for stmt in self.input {
-            let v = self.run_stmt(stmt);
-            // End statement
-            if let Err(Errors::EndProg) = v {
-                break;
+        self.call_stack.push((1, self.input.len()));
+        'outer: loop {
+            let Some((from, to)) = self.call_stack.last() else {break};
+            for i in *from - 1..*to {
+                let stmt = &self.input[i];
+                let v = self.run_stmt(stmt);
+                match v {
+                    // 'end'
+                    Err(Errors::EndProg) => break 'outer,
+                    // 'run'
+                    Err(Errors::Interrupt(from, to)) => {
+                        // Save current line number
+                        let current = self
+                            .call_stack
+                            .last_mut()
+                            .expect("NONEXISTENT CURRENT STACK FRAME");
+                        current.0 = i + 2;
+
+                        self.call_stack.push((from, to));
+                        continue 'outer;
+                    }
+                    _ => ret = v?,
+                }
             }
-            ret = v?;
+            self.call_stack.pop();
         }
         Ok(ret)
     }

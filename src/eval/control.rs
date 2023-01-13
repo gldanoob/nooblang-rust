@@ -16,9 +16,7 @@ impl<'a> Eval<'a> {
                 let from = from as usize;
                 let to = to as usize;
 
-                for stmt in &self.input[from - 1..=to - 1] {
-                    self.run_stmt(stmt)?;
-                }
+                return Err(Errors::Interrupt(from, to));
             }
         }
         return Err(self.runtime_error("INVALID LINE RANGE".to_string(), Pos(line, 1)));
@@ -29,7 +27,7 @@ impl<'a> Eval<'a> {
         if let Value::Int(at) = at {
             if at >= 1 && at <= self.input.len() as i128 {
                 let at = at as usize;
-                return self.run_stmt(&self.input[at - 1]).and(Ok(()));
+                return Err(Errors::Interrupt(at, at));
             }
         }
         return Err(self.runtime_error("INVALID LINE NUMBER".to_string(), Pos(line, 1)));

@@ -1,0 +1,48 @@
+write "Enter number of rows (1 ~ 10): "
+n be num read
+run 25 to 26 if n mod 1 isnt 0 or n below 1 or n above 10
+a be 1
+i be 0
+    s be ""
+    j be i
+    x be 0
+    run 29 plus i
+        run 20 to 23 if j is 0
+        run j plus 38
+        x be y
+        run j plus 39
+        x be x plus y
+        run j plus 28
+        s be s plus " " plus text x
+
+        j be j minus 1
+    run 10 to 19
+    write s plus " 1"
+    i be i plus 1
+    end if i is n
+run 6 to 23
+
+write "Need integer between 1 and 10 inclusive"
+run 1 to 23
+
+a be x
+b be x
+c be x
+d be x
+e be x
+f be x
+g be x
+h be x
+k be x
+l be x
+
+y be a
+y be b
+y be c
+y be d
+y be e
+y be f 
+y be g
+y be h
+y be k
+y be l
