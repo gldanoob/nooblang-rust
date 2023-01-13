@@ -1,6 +1,6 @@
 # NOOBLANG interpreter written in Rust (not blazingly fast)
 
-## The Perfect (Esoteric) Programming Language for Beginners
+**The Perfect (Esoteric) Programming Language for Beginners**
 - ❌ No symbols (except `"`)
 - ❌ No confusing `for`, `while` loops, functions
 - ❌ No fancy data structures (`arrays` etc.)
