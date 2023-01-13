@@ -10,7 +10,7 @@
 <br>
 
 # Examples
-## To print prime numbers between 0 and 100:
+## Prime numbers between 0 and 100:
 ```
 x be 2                         
 prime be yes                  
@@ -84,11 +84,11 @@ y be h
 y be k
 y be l
 ```
-Only letters are allowed in variables names. Why? Because who would name their kid "Bob123"?
 
 <br>
 
 # TODO
+- Alphanumeric variable names
 - Escape characters
 - Prove turing completeness (Probably a brainf interpreter)
 - Fix column numbers of errors
