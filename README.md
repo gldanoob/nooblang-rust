@@ -90,6 +90,7 @@ y be l
 # TODO
 - Alphanumeric variable names
 - Escape characters
+- Tutorial/Docs (god damn)
 - Prove turing completeness (Probably a brainf interpreter)
 - Fix column numbers of errors
 - Bytecode compiler? Nah, I don't have time
