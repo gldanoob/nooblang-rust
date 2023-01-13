@@ -229,7 +229,7 @@ impl<'a> Lexer<'a> {
         }
 
         if self.reader.peek() != b'\n' {
-            return Err(self.syntax_error("Carriage without return? Goofy".to_string(), pos));
+            return Err(self.syntax_error("CARRIAGE WITHOUT RETURN".to_string(), pos));
         }
 
         // Skip \n

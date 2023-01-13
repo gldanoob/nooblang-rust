@@ -2,8 +2,8 @@
 
 **The Perfect (Esoteric) Programming Language for Beginners**
 - ❌ No symbols (except `"`)
-- ❌ No confusing `for`, `while` loops, functions
-- ❌ No fancy data structures (`arrays` etc.)
+- ❌ No `for`, `while` loops, functions (too overwhelming for starters)
+- ❌ No data structures like arrays (a pain to understand)
 - ❌ No variable scoping rules and stuff
 - ✔️ Everything done with `if`s and procedures (`run`ning lines of code)
 

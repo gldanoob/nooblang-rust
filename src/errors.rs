@@ -23,7 +23,7 @@ impl Display for Errors {
             Self::SyntaxError(e, Pos(line, col), context) => {
                 writeln!(f, "--------- TYPO ---------")?;
                 writeln!(f, "{}", e)?;
-                writeln!(f, "IN LINE: {}, COL: {}", line, col)?;
+                writeln!(f, "IN LINE: {}", line)?;
                 writeln!(f)?;
 
                 // Cool stuff
@@ -39,14 +39,14 @@ impl Display for Errors {
             Self::RuntimeError(e, Pos(line, col), context) => {
                 writeln!(f, "--------- ERROR ---------")?;
                 writeln!(f, "{}", e)?;
-                writeln!(f, "IN LINE: {}, COL: {}", line, col)?;
+                writeln!(f, "IN LINE: {}", line)?;
                 writeln!(f)?;
 
                 // Cool stuff
                 write!(f, "--> ")?;
                 write!(f, "{}", context)?;
 
-                write!(f, "\n{}^-- SEE", " ".repeat(col + 3))
+                write!(f, "\n{}^-- LOOK", " ".repeat(col + 3))
             },
             Self::Interrupt(from, to) => {
                 writeln!(f, "Control flow changed to lines: {}-{}", from, to)

@@ -45,7 +45,7 @@ impl<'a> Eval<'a> {
             (Value::Float(a), Value::Int(b)) => *a < (*b as f64),
             (Value::Float(a), Value::Float(b)) => a < b,
             (Value::Text(a), Value::Text(b)) => a < b,
-            _ => return Err(self.runtime_error("CANNOT COMPARE VALUES".to_string(), location)),
+            _ => return Err(self.runtime_error("CAN'T COMPARE VALUES".to_string(), location)),
         }))
     }
 
