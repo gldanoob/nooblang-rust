@@ -1,4 +1,4 @@
-# NOOBLANG interpreter written in Rust (not blazingly fast)
+# NOOBLANG
 
 **The Perfect (Esoteric) Programming Language for Beginners**
 - ❌ No symbols (except `"`)
@@ -26,7 +26,7 @@ run 2 to 11
 ```
 
 Most of the syntax shouldn't be hard to understand (they're designed for beginners),
-but in case you're wondering, `run` runs the line(s) of code with the given line number (or range)
+but in case you're wondering, `run` runs the line(s) of code with the given line number
 
 So `run 8 to 11 if y is x` runs lines 8-11 if `x` is equal to `y`  
 
@@ -84,9 +84,9 @@ y be h
 y be k
 y be l
 ```
-Only letters are allowed in variables names. Why? Because who would name their kid "Bobby123"?
+Only letters are allowed in variables names. Why? Because who would name their kid "Bob123"?
 
-<br><br>
+<br>
 
 # TODO
 - Escape characters
